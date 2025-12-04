@@ -1,13 +1,12 @@
 import mlcroissant as mlc
 import numpy as np
 import os
+import argparse
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
-JSON_PATH = "hackathon_dataset/croissant.json"
-DATASET_ROOT = "hackathon_dataset"
 BATCH_SIZE = 16
 LEARNING_RATE = 0.001
 EPOCHS = 5
@@ -94,8 +93,9 @@ class SimpleCNN(nn.Module):
         x = self.classifier(x)
         return x
 
-def train_model():
-    dataset = RomanCroissantDataset(JSON_PATH, DATASET_ROOT)
+def train_model(dataset_dir):
+    json_path = os.path.join(dataset_dir, "croissant.json")
+    dataset = RomanCroissantDataset(json_path, dataset_dir)
     
     loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
     
@@ -138,4 +138,9 @@ def train_model():
     return model
 
 if __name__ == "__main__":
-    trained_model = train_model()
+    parser = argparse.ArgumentParser(description="Test and train on Croissant dataset")
+    parser.add_argument("--dataset_dir", "-d", type=str, default="./hackathon_dataset",
+                        help="Dataset directory containing croissant.json (default: ./hackathon_dataset)")
+    args = parser.parse_args()
+    
+    trained_model = train_model(args.dataset_dir)

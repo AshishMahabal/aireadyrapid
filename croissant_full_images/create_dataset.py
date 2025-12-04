@@ -1,14 +1,10 @@
 import os
 import glob
+import argparse
 import numpy as np
 import pandas as pd
 from astropy.io import fits
 from astropy.visualization import ZScaleInterval
-
-INPUT_DIR = "./mini_dataset"
-OUTPUT_DIR = "./hackathon_dataset"
-IMAGES_DIR = os.path.join(OUTPUT_DIR, "images")
-os.makedirs(IMAGES_DIR, exist_ok=True)
 
 FILES = {
     "sci": "bkg_subbed_science_image.fits",
@@ -30,8 +26,11 @@ def load_and_normalize(filepath):
         print(f"Error reading {filepath}: {e}")
         return None
 
-def process_dataset():
-    job_folders = sorted(glob.glob(os.path.join(INPUT_DIR, "jid*")))
+def process_dataset(input_dir, output_dir):
+    images_dir = os.path.join(output_dir, "images")
+    os.makedirs(images_dir, exist_ok=True)
+    
+    job_folders = sorted(glob.glob(os.path.join(input_dir, "jid*")))
     print(f"Found {len(job_folders)} jobs to process.")
     
     all_records = []
@@ -58,7 +57,7 @@ def process_dataset():
         full_tensor = np.stack(channels, axis=-1)
         
         npy_filename = f"{job_id}.npy"
-        np.save(os.path.join(IMAGES_DIR, npy_filename), full_tensor)
+        np.save(os.path.join(images_dir, npy_filename), full_tensor)
         print(f"Saved .npy", end=" ")
 
         cat_path = os.path.join(job_folder, "psfcat.csv")
@@ -84,7 +83,7 @@ def process_dataset():
 
     if all_records:
         master_df = pd.concat(all_records)
-        master_csv_path = os.path.join(OUTPUT_DIR, "master_index.csv")
+        master_csv_path = os.path.join(output_dir, "master_index.csv")
         master_df.to_csv(master_csv_path, index=False)
         print(f"\nDone! Master Index saved to {master_csv_path}")
         print(f"Total Candidates: {len(master_df)}")
@@ -93,4 +92,11 @@ def process_dataset():
         print("\nFailed to create dataset.")
 
 if __name__ == "__main__":
-    process_dataset()
+    parser = argparse.ArgumentParser(description="Create dataset from FITS files")
+    parser.add_argument("--input_dir", "-i", type=str, default="./mini_dataset",
+                        help="Input directory containing job folders (default: ./mini_dataset)")
+    parser.add_argument("--output_dir", "-o", type=str, default="./hackathon_dataset",
+                        help="Output directory for processed dataset (default: ./hackathon_dataset)")
+    args = parser.parse_args()
+    
+    process_dataset(args.input_dir, args.output_dir)
