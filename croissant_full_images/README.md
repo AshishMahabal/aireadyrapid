@@ -61,8 +61,7 @@ Generates a Croissant metadata file (`croissant.json`) for the dataset.
 
 **What it does:**
 - Reads the master index CSV
-- Computes SHA256 hash for data integrity
-- Creates Croissant-compliant JSON metadata describing the dataset schema
+- Creates Croissant JSON metadata describing the dataset
 
 **Usage:**
 ```bash
