@@ -10,7 +10,7 @@ The pipelines process difference imaging outputs from the Roman telescope's tran
 - Science image
 - Reference image
 - Difference image
-- Score image
+- SCORR image
 - Candidate catalog with positions and metadata
 
 ## Pipelines
