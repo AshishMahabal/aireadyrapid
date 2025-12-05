@@ -111,15 +111,6 @@ python generate_croissant.py -c ./my_hackathon_dataset/master_index.csv -o ./my_
 python test_croissant_dataset.py -d ./my_hackathon_dataset
 ```
 
-## Requirements
-
-- Python 3.8+
-- numpy
-- pandas
-- astropy
-- mlcroissant
-- torch
-
 Install dependencies:
 ```bash
 pip install numpy pandas astropy mlcroissant torch

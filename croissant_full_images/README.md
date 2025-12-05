@@ -110,15 +110,6 @@ python generate_croissant.py -c ./my_dataset/master_index.csv -o ./my_dataset/cr
 python test_croissant_dataset.py -d ./my_dataset
 ```
 
-## Requirements
-
-- Python 3.8+
-- numpy
-- pandas
-- astropy
-- mlcroissant
-- torch
-
 Install dependencies:
 ```bash
 pip install numpy pandas astropy mlcroissant torch
