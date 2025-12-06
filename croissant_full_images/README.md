@@ -78,12 +78,13 @@ python generate_croissant.py --csv_path <path_to_csv> --output <output_json_path
 
 ### 3. `test_croissant_dataset.py`
 
-Tests the Croissant dataset by training a simple CNN classifier.
+Tests the dataset by training a CNN classifier.
 
 **What it does:**
-- Loads the dataset using the Croissant metadata
+- Loads the dataset using Croissant metadata
 - Extracts 64x64 cutouts around each candidate position
-- Trains a simple CNN for binary classification (real vs bogus transients)
+- Combines image data with tabular features (sharpness, roundness, flux, magnitude, etc.)
+- Trains a CNN for binary classification
 
 **Usage:**
 ```bash
@@ -121,10 +122,20 @@ The `master_index.csv` contains the following columns:
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `job_id` | string | Unique job identifier |
-| `x` | float | X coordinate of candidate in image |
-| `y` | float | Y coordinate of candidate in image |
-| `flux` | float | Measured flux of candidate |
+| `id` | float | Candidate ID from finder catalog |
+| `jid` | string | Job identifier |
+| `x` | float | X coordinate in image |
+| `y` | float | Y coordinate in image |
+| `sharpness` | float | Source sharpness |
+| `roundness1` | float | First roundness metric |
+| `roundness2` | float | Second roundness metric |
+| `npix` | float | Number of pixels |
+| `peak` | float | Peak pixel value |
+| `flux` | float | Measured flux |
+| `mag` | float | Instrumental magnitude |
+| `daofind_mag` | float | DAOFind magnitude |
+| `flags` | float | Quality flags from psfcat |
+| `match` | float | Match indicator from psfcat |
 | `label` | int | Binary label (0=bogus, 1=real) |
 | `image_filename` | string | Relative path to the `.npy` image tensor |
 

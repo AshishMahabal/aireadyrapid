@@ -84,11 +84,22 @@ def process_dataset(input_dir, output_dir):
 
         # Load catalog
         cat_path = os.path.join(job_folder, "psfcat.csv")
-        if not os.path.exists(cat_path):
+        finder_path = os.path.join(job_folder, "diffimage_masked_psfcat_finder.txt")
+        
+        if not os.path.exists(cat_path) or not os.path.exists(finder_path):
             print("No catalog found.")
             continue
+        
+        df_psfcat = pd.read_csv(cat_path)
+        df_finder = pd.read_csv(finder_path, sep=r'\s+', skipinitialspace=True)
+        df_finder = df_finder.rename(columns={'xcentroid': 'x', 'ycentroid': 'y'})
+        
+        df = df_finder.copy()
+        if 'flags' in df_psfcat.columns:
+            df['flags'] = df_psfcat['flags']
+        if 'match' in df_psfcat.columns:
+            df['match'] = df_psfcat['match']
             
-        df = pd.read_csv(cat_path)
         job_cutout_count = 0
         
         for idx, row in df.iterrows():
@@ -99,29 +110,18 @@ def process_dataset(input_dir, output_dir):
                 cutout = extract_cutout(images[key], x, y, CUTOUT_SIZE)
                 channels.append(cutout)
             
-            # Stack into 4-channel tensor (64, 64, 4)
             tensor = np.stack(channels, axis=-1)
             
-            # Save cutout
             cutout_filename = f"{job_id}_cutout{job_cutout_count:05d}.npy"
             np.save(os.path.join(cutouts_dir, cutout_filename), tensor)
             
-            # Convert 'match' column to a binary label (0=bogus, 1=real)
             label = 0 if row['match'] == -1 else 1
             
-            record = {
-                'cutout_id': cutout_counter,
-                'job_id': job_id,
-                'x': x,
-                'y': y,
-                'label': label,
-                'cutout_filename': f"cutouts/{cutout_filename}"
-            }
-            
-            # Add optional columns if they exist
-            for col in ['flux', 'fwhm', 'elongation']:
-                if col in row:
-                    record[col] = row[col]
+            record = row.to_dict()
+            record['cutout_id'] = cutout_counter
+            record['jid'] = job_id
+            record['label'] = label
+            record['cutout_filename'] = f"cutouts/{cutout_filename}"
             
             all_records.append(record)
             cutout_counter += 1

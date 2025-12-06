@@ -61,22 +61,24 @@ def process_dataset(input_dir, output_dir):
         print(f"Saved .npy", end=" ")
 
         cat_path = os.path.join(job_folder, "psfcat.csv")
-        if os.path.exists(cat_path):
-            df = pd.read_csv(cat_path)
+        finder_path = os.path.join(job_folder, "diffimage_masked_psfcat_finder.txt")
+        
+        if os.path.exists(cat_path) and os.path.exists(finder_path):
+            df_psfcat = pd.read_csv(cat_path)
+            df_finder = pd.read_csv(finder_path, sep=r'\s+', skipinitialspace=True)
+            df_finder = df_finder.rename(columns={'xcentroid': 'x', 'ycentroid': 'y'})
             
-            # Convert 'match' column to a binary label (0=bogus, 1=real)
-            # Assumes -1 is bogus, anything else is real
+            df = df_finder.copy()
+            if 'flags' in df_psfcat.columns:
+                df['flags'] = df_psfcat['flags']
+            if 'match' in df_psfcat.columns:
+                df['match'] = df_psfcat['match']
+            
             df['label'] = df['match'].apply(lambda x: 0 if x == -1 else 1)
-            
             df['image_filename'] = f"images/{npy_filename}"
+            df['jid'] = job_id
             
-            cols_to_keep = ['x', 'y', 'flux', 'fwhm', 'elongation', 'label', 'image_filename']
-
-            existing_cols = [c for c in cols_to_keep if c in df.columns]
-            df_clean = df[existing_cols].copy()
-            df_clean['job_id'] = job_id
-            
-            all_records.append(df_clean)
+            all_records.append(df)
             print(f"Extracted {len(df)} candidates.")
         else:
             print("No catalog found.")

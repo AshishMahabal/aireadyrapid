@@ -43,13 +43,23 @@ class RomanCutoutDataset(Dataset):
         
         # Convert to tensor (C, H, W) format
         tensor = torch.from_numpy(cutout).permute(2, 0, 1).float()
+        
+        features = []
+        for feat in ['sharpness', 'roundness1', 'roundness2', 'npix', 'peak', 'flux', 'mag', 'daofind_mag']:
+            val = record.get(f"transient_candidates/{feat}")
+            if val is not None and not (isinstance(val, float) and np.isnan(val)):
+                features.append(float(val))
+            else:
+                features.append(0.0)
+        
+        features_tensor = torch.tensor(features, dtype=torch.float32)
         label = torch.tensor(label).float().unsqueeze(0)
 
-        return tensor, label
+        return tensor, features_tensor, label
 
 
 class SimpleCNN(nn.Module):
-    def __init__(self):
+    def __init__(self, num_features=8):
         super(SimpleCNN, self).__init__()
         
         self.features = nn.Sequential(
@@ -68,13 +78,15 @@ class SimpleCNN(nn.Module):
         
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(64 * 8 * 8, 128),
+            nn.Linear(64 * 8 * 8 + num_features, 128),
             nn.ReLU(),
             nn.Linear(128, 1)
         )
 
-    def forward(self, x):
+    def forward(self, x, features):
         x = self.features(x)
+        x = torch.flatten(x, 1)
+        x = torch.cat([x, features], dim=1)
         x = self.classifier(x)
         return x
 
@@ -102,12 +114,12 @@ def train_model(dataset_dir):
         correct = 0
         total = 0
         
-        for i, (inputs, labels) in enumerate(loader):
-            inputs, labels = inputs.to(device), labels.to(device)
+        for i, (inputs, features, labels) in enumerate(loader):
+            inputs, features, labels = inputs.to(device), features.to(device), labels.to(device)
             
             optimizer.zero_grad()
             
-            outputs = model(inputs)
+            outputs = model(inputs, features)
             loss = criterion(outputs, labels)
             
             loss.backward()

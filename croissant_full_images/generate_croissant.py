@@ -46,23 +46,12 @@ def generate_croissant(csv_path, output_path):
             name="transient_candidates",
             fields=[
                 mlc.Field(
-                    id="transient_candidates/job_id",
-                    name="job_id",
-                    description="Job ID",
-                    data_types=[mlc.DataType.TEXT],
+                    id="transient_candidates/id",
+                    name="id",
+                    data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
-                        extract=mlc.Extract(column="job_id")
-                    )
-                ),
-                mlc.Field(
-                    id="transient_candidates/label",
-                    name="label",
-                    description="0 = Bogus, 1 = Real",
-                    data_types=[mlc.DataType.INTEGER],
-                    source=mlc.Source(
-                        file_object="master_index",
-                        extract=mlc.Extract(column="label")
+                        extract=mlc.Extract(column="id")
                     )
                 ),
                 mlc.Field(
@@ -84,6 +73,51 @@ def generate_croissant(csv_path, output_path):
                     )
                 ),
                 mlc.Field(
+                    id="transient_candidates/sharpness",
+                    name="sharpness",
+                    data_types=[mlc.DataType.FLOAT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="sharpness")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/roundness1",
+                    name="roundness1",
+                    data_types=[mlc.DataType.FLOAT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="roundness1")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/roundness2",
+                    name="roundness2",
+                    data_types=[mlc.DataType.FLOAT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="roundness2")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/npix",
+                    name="npix",
+                    data_types=[mlc.DataType.FLOAT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="npix")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/peak",
+                    name="peak",
+                    data_types=[mlc.DataType.FLOAT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="peak")
+                    )
+                ),
+                mlc.Field(
                     id="transient_candidates/flux",
                     name="flux",
                     data_types=[mlc.DataType.FLOAT],
@@ -92,12 +126,67 @@ def generate_croissant(csv_path, output_path):
                         extract=mlc.Extract(column="flux")
                     )
                 ),
-                
                 mlc.Field(
-                    id="transient_candidates/full_image_path",
-                    name="full_image_path",
-                    description="Relative path to the .npy file containing the (4096,4096,4) tensor",
-                    data_types=[mlc.DataType.TEXT], 
+                    id="transient_candidates/mag",
+                    name="mag",
+                    data_types=[mlc.DataType.FLOAT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="mag")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/daofind_mag",
+                    name="daofind_mag",
+                    data_types=[mlc.DataType.FLOAT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="daofind_mag")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/flags",
+                    name="flags",
+                    data_types=[mlc.DataType.FLOAT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="flags")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/match",
+                    name="match",
+                    data_types=[mlc.DataType.FLOAT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="match")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/label",
+                    name="label",
+                    description="0 = Bogus, 1 = Real",
+                    data_types=[mlc.DataType.INTEGER],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="label")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/jid",
+                    name="jid",
+                    description="Job ID",
+                    data_types=[mlc.DataType.TEXT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="jid")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/image_path",
+                    name="image_path",
+                    description="Relative path to the .npy file containing the full image tensor",
+                    data_types=[mlc.DataType.TEXT],
                     source=mlc.Source(
                         file_object="master_index",
                         extract=mlc.Extract(column="image_filename")

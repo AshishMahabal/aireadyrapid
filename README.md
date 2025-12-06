@@ -76,14 +76,15 @@ input_dir/
 │   ├── awaicgen_output_mosaic_image_resampled.fits
 │   ├── diffimage_masked.fits
 │   ├── scorrimage_masked.fits
-│   └── psfcat.csv
+│   ├── psfcat.csv
+│   └── diffimage_masked_psfcat_finder.txt
 ├── jid002/
 │   └── ...
 ```
 
-The `psfcat.csv` catalog should contain at minimum:
-- `x`, `y`: Candidate pixel coordinates
-- `match`: Match indicator (-1 = bogus, other = real)
+Required catalog files:
+- `psfcat.csv`: Contains `flags` and `match` columns
+- `diffimage_masked_psfcat_finder.txt`: Contains photometry features (x, y coordinates, sharpness, roundness, flux, magnitude, etc.)
 
 ## Output Format
 
