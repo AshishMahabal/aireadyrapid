@@ -48,6 +48,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/id",
                     name="id",
+                    description="Candidate identifier from source finder",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -57,6 +58,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/x",
                     name="x",
+                    description="Pixel x-coordinate",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -66,6 +68,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/y",
                     name="y",
+                    description="Pixel y-coordinate",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -75,6 +78,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/sharpness",
                     name="sharpness",
+                    description="Source sharpness metric",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -84,6 +88,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/roundness1",
                     name="roundness1",
+                    description="First roundness parameter",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -93,6 +98,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/roundness2",
                     name="roundness2",
+                    description="Second roundness parameter",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -102,6 +108,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/npix",
                     name="npix",
+                    description="Number of pixels above threshold",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -111,6 +118,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/peak",
                     name="peak",
+                    description="Peak pixel intensity",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -120,6 +128,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/flux",
                     name="flux",
+                    description="Measured source flux",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -129,6 +138,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/mag",
                     name="mag",
+                    description="Instrumental magnitude",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -138,6 +148,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/daofind_mag",
                     name="daofind_mag",
+                    description="DAOFind-derived magnitude",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -147,6 +158,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/flags",
                     name="flags",
+                    description="Quality flags from photometry",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -156,6 +168,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/match",
                     name="match",
+                    description="Cross-match indicator (-1 for bogus)",
                     data_types=[mlc.DataType.FLOAT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -165,7 +178,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/cutout_id",
                     name="cutout_id",
-                    description="Unique cutout identifier",
+                    description="Sequential cutout identifier",
                     data_types=[mlc.DataType.INTEGER],
                     source=mlc.Source(
                         file_object="master_index",
@@ -175,7 +188,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/jid",
                     name="jid",
-                    description="Job ID",
+                    description="Job identifier",
                     data_types=[mlc.DataType.TEXT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -185,7 +198,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/label",
                     name="label",
-                    description="0 = Bogus, 1 = Real",
+                    description="Binary classification (0=bogus, 1=real)",
                     data_types=[mlc.DataType.INTEGER],
                     source=mlc.Source(
                         file_object="master_index",
@@ -195,7 +208,7 @@ def generate_croissant(csv_path, output_path):
                 mlc.Field(
                     id="transient_candidates/cutout_path",
                     name="cutout_path",
-                    description="Relative path to the .npy file containing the (64,64,4) cutout tensor",
+                    description="Path to 64x64x4 cutout tensor (.npy)",
                     data_types=[mlc.DataType.TEXT],
                     source=mlc.Source(
                         file_object="master_index",
@@ -208,7 +221,7 @@ def generate_croissant(csv_path, output_path):
 
     metadata = mlc.Metadata(
         name="roman_croissant_cutouts",
-        description="64x64 cutouts of the transient candidates.",
+        description="Pre-extracted 64x64 cutouts with candidate metadata for transient classification",
         distribution=distribution,
         record_sets=record_sets
     )
