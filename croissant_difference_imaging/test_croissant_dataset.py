@@ -12,17 +12,18 @@ LEARNING_RATE = 0.001
 EPOCHS = 5
 
 class DifferenceImagingDataset(Dataset):
-    def __init__(self, json_path, root_dir, crop_size=64):
+    def __init__(self, json_path, root_dir, record_set_name, crop_size=64):
         self.root_dir = root_dir
         self.crop_size = crop_size
         self.half_size = crop_size // 2
+        self.record_set_name = record_set_name
         
         try:
             self.ds = mlc.Dataset(jsonld=json_path)
-            self.records = list(self.ds.records("transient_candidates"))
-            print(f"Loaded {len(self.records)} records.")
+            self.records = list(self.ds.records(record_set_name))
+            print(f"Loaded {len(self.records)} {record_set_name} records.")
         except Exception as e:
-            print(f"Error loading dataset: {e}")
+            print(f"Error loading {record_set_name} dataset: {e}")
             self.records = []
 
     def __len__(self):
@@ -31,10 +32,10 @@ class DifferenceImagingDataset(Dataset):
     def __getitem__(self, idx):
         record = self.records[idx]
         
-        label = record.get("transient_candidates/label")
-        x = record.get("transient_candidates/x")
-        y = record.get("transient_candidates/y")
-        rel_path = record.get("transient_candidates/image_path")
+        label = record.get(f"{self.record_set_name}/label")
+        x = record.get(f"{self.record_set_name}/x")
+        y = record.get(f"{self.record_set_name}/y")
+        rel_path = record.get(f"{self.record_set_name}/image_path")
         
         if isinstance(rel_path, bytes):
             rel_path = rel_path.decode('utf-8')
@@ -62,7 +63,7 @@ class DifferenceImagingDataset(Dataset):
         
         features = []
         for feat in ['sharpness', 'roundness1', 'roundness2', 'npix', 'peak', 'flux', 'mag', 'daofind_mag']:
-            val = record.get(f"transient_candidates/{feat}")
+            val = record.get(f"{self.record_set_name}/{feat}")
             if val is not None and not (isinstance(val, float) and np.isnan(val)):
                 features.append(float(val))
             else:
@@ -105,14 +106,73 @@ class DiffImagingCNN(nn.Module):
         x = self.classifier(x)
         return x
 
-def train_model(dataset_dir):
+def test_dataset_loading(dataset_dir):
+    """Test that both record sets can be loaded and accessed"""
     json_path = os.path.join(dataset_dir, "croissant.json")
-    dataset = DifferenceImagingDataset(json_path, dataset_dir)
+    
+    print("=" * 60)
+    print("Testing Dataset Loading")
+    print("=" * 60)
+    
+    # Test ZOGY dataset
+    print("\n1. Testing ZOGY Record Set:")
+    zogy_dataset = DifferenceImagingDataset(json_path, dataset_dir, "zogy_candidates")
+    print(f"   - Total records: {len(zogy_dataset)}")
+    if len(zogy_dataset) > 0:
+        img, feats, lbl = zogy_dataset[0]
+        print(f"   - Sample image shape: {img.shape}")
+        print(f"   - Sample features shape: {feats.shape}")
+        print(f"   - Sample label: {lbl.item()}")
+    
+    # Test SFFT dataset
+    print("\n2. Testing SFFT Record Set:")
+    sfft_dataset = DifferenceImagingDataset(json_path, dataset_dir, "sfft_candidates")
+    print(f"   - Total records: {len(sfft_dataset)}")
+    if len(sfft_dataset) > 0:
+        img, feats, lbl = sfft_dataset[0]
+        print(f"   - Sample image shape: {img.shape}")
+        print(f"   - Sample features shape: {feats.shape}")
+        print(f"   - Sample label: {lbl.item()}")
+    
+    # Verify they access same images but different catalogs
+    print("\n3. Comparing ZOGY vs SFFT:")
+    if len(zogy_dataset) > 0 and len(sfft_dataset) > 0:
+        zogy_rec = zogy_dataset.records[0]
+        sfft_rec = sfft_dataset.records[0]
+        
+        zogy_img_path = zogy_rec.get("zogy_candidates/image_path")
+        sfft_img_path = sfft_rec.get("sfft_candidates/image_path")
+        
+        if isinstance(zogy_img_path, bytes):
+            zogy_img_path = zogy_img_path.decode('utf-8')
+        if isinstance(sfft_img_path, bytes):
+            sfft_img_path = sfft_img_path.decode('utf-8')
+        
+        print(f"   - ZOGY image path: {zogy_img_path}")
+        print(f"   - SFFT image path: {sfft_img_path}")
+        print(f"   - Same images used: {zogy_img_path == sfft_img_path}")
+        
+        zogy_x = zogy_rec.get("zogy_candidates/x")
+        sfft_x = sfft_rec.get("sfft_candidates/x")
+        print(f"   - ZOGY first candidate x: {zogy_x:.2f}")
+        print(f"   - SFFT first candidate x: {sfft_x:.2f}")
+        print(f"   - Different candidates: {zogy_x != sfft_x}")
+    
+    return zogy_dataset, sfft_dataset
+
+def train_model(dataset_dir, record_set="zogy_candidates"):
+    """Train a model on specified record set"""
+    json_path = os.path.join(dataset_dir, "croissant.json")
+    dataset = DifferenceImagingDataset(json_path, dataset_dir, record_set)
+    
+    if len(dataset) == 0:
+        print(f"No data found in {record_set}. Skipping training.")
+        return None
     
     loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Training on {device}...")
+    print(f"\nTraining on {device} using {record_set}...")
     
     model = DiffImagingCNN().to(device)
     criterion = nn.BCEWithLogitsLoss()
@@ -146,13 +206,33 @@ def train_model(dataset_dir):
         epoch_acc = 100 * correct / total
         print(f"Epoch {epoch+1} Complete. Avg Loss: {running_loss/len(loader):.4f} | Acc: {epoch_acc:.2f}%")
 
-    print("\nTraining completed")
+    print(f"\nTraining on {record_set} completed")
     return model
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Test difference imaging dataset with CNN training")
     parser.add_argument("--dataset_dir", "-d", type=str, default="./hackathon_dataset",
                         help="Dataset directory containing croissant.json (default: ./hackathon_dataset)")
+    parser.add_argument("--record_set", "-r", type=str, default="both", choices=["zogy", "sfft", "both"],
+                        help="Which record set to train on: zogy, sfft, or both (default: both)")
     args = parser.parse_args()
     
-    train_model(args.dataset_dir)
+    # Test loading both datasets
+    zogy_ds, sfft_ds = test_dataset_loading(args.dataset_dir)
+    
+    # Train models
+    print("\n" + "=" * 60)
+    print("Training Models")
+    print("=" * 60)
+    
+    if args.record_set in ["zogy", "both"]:
+        print("\n" + "-" * 60)
+        print("Training on ZOGY candidates")
+        print("-" * 60)
+        zogy_model = train_model(args.dataset_dir, "zogy_candidates")
+    
+    if args.record_set in ["sfft", "both"]:
+        print("\n" + "-" * 60)
+        print("Training on SFFT candidates")
+        print("-" * 60)
+        sfft_model = train_model(args.dataset_dir, "sfft_candidates")

@@ -58,7 +58,8 @@ def process_dataset(input_dir, output_dir):
     job_folders = sorted(glob.glob(os.path.join(input_dir, "jid*")))
     print(f"Found {len(job_folders)} jobs to process.")
     
-    all_records = []
+    all_zogy_records = []
+    all_sfft_records = []
 
     for job_folder in job_folders:
         job_id = os.path.basename(job_folder)
@@ -109,12 +110,13 @@ def process_dataset(input_dir, output_dir):
                     import shutil
                     shutil.copy2(src_path, dst_path)
 
-        finder_path = os.path.join(job_folder, CATALOG_FILES["zogy_finder"])
-        psf_path = os.path.join(job_folder, CATALOG_FILES["zogy_psf"])
+        # Extract ZOGY candidates
+        zogy_finder_path = os.path.join(job_folder, CATALOG_FILES["zogy_finder"])
+        zogy_psf_path = os.path.join(job_folder, CATALOG_FILES["zogy_psf"])
         
-        if os.path.exists(finder_path) and os.path.exists(psf_path):
-            df_finder = pd.read_csv(finder_path, sep=r'\s+', skipinitialspace=True)
-            df_psf = pd.read_csv(psf_path, sep=r'\s+', skipinitialspace=True)
+        if os.path.exists(zogy_finder_path) and os.path.exists(zogy_psf_path):
+            df_finder = pd.read_csv(zogy_finder_path, sep=r'\s+', skipinitialspace=True)
+            df_psf = pd.read_csv(zogy_psf_path, sep=r'\s+', skipinitialspace=True)
             
             df_finder = df_finder.rename(columns={'xcentroid': 'x', 'ycentroid': 'y'})
             
@@ -128,20 +130,55 @@ def process_dataset(input_dir, output_dir):
             df['image_filename'] = f"images/{npy_filename}"
             df['jid'] = job_id
             
-            all_records.append(df)
-            print(f"Extracted {len(df)} candidates.")
+            all_zogy_records.append(df)
+            print(f"ZOGY: {len(df)} candidates.", end=" ")
+        
+        # Extract SFFT candidates
+        sfft_finder_path = os.path.join(job_folder, CATALOG_FILES["sfft_finder"])
+        sfft_psf_path = os.path.join(job_folder, CATALOG_FILES["sfft_psf"])
+        
+        if os.path.exists(sfft_finder_path) and os.path.exists(sfft_psf_path):
+            df_finder = pd.read_csv(sfft_finder_path, sep=r'\s+', skipinitialspace=True)
+            df_psf = pd.read_csv(sfft_psf_path, sep=r'\s+', skipinitialspace=True)
+            
+            df_finder = df_finder.rename(columns={'xcentroid': 'x', 'ycentroid': 'y'})
+            
+            df = df_finder.copy()
+            if 'flags' in df_psf.columns:
+                df['flags'] = df_psf['flags'].values[:len(df)]
+            if 'match' in df_psf.columns:
+                df['match'] = df_psf['match'].values[:len(df)]
+            
+            df['label'] = df['match'].apply(lambda x: 0 if x == -1 else 1)
+            df['image_filename'] = f"images/{npy_filename}"
+            df['jid'] = job_id
+            
+            all_sfft_records.append(df)
+            print(f"SFFT: {len(df)} candidates.")
         else:
-            print("No catalogs found.")
+            print("No SFFT catalogs found.")
 
-    if all_records:
-        master_df = pd.concat(all_records, ignore_index=True)
-        master_csv_path = os.path.join(output_dir, "master_index.csv")
-        master_df.to_csv(master_csv_path, index=False)
-        print(f"\nDone! Master Index saved to {master_csv_path}")
-        print(f"Total Candidates: {len(master_df)}")
-        print(f"Real Transients: {master_df['label'].sum()}")
+    # Save ZOGY candidates
+    if all_zogy_records:
+        zogy_df = pd.concat(all_zogy_records, ignore_index=True)
+        zogy_csv_path = os.path.join(output_dir, "zogy_candidates.csv")
+        zogy_df.to_csv(zogy_csv_path, index=False)
+        print(f"\nZOGY candidates saved to {zogy_csv_path}")
+        print(f"Total ZOGY Candidates: {len(zogy_df)}")
+        print(f"ZOGY Real Transients: {zogy_df['label'].sum()}")
     else:
-        print("\nFailed to create dataset.")
+        print("\nNo ZOGY candidates found.")
+    
+    # Save SFFT candidates
+    if all_sfft_records:
+        sfft_df = pd.concat(all_sfft_records, ignore_index=True)
+        sfft_csv_path = os.path.join(output_dir, "sfft_candidates.csv")
+        sfft_df.to_csv(sfft_csv_path, index=False)
+        print(f"\nSFFT candidates saved to {sfft_csv_path}")
+        print(f"Total SFFT Candidates: {len(sfft_df)}")
+        print(f"SFFT Real Transients: {sfft_df['label'].sum()}")
+    else:
+        print("\nNo SFFT candidates found.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create difference imaging dataset from FITS files")
