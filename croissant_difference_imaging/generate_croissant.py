@@ -172,7 +172,7 @@ def create_field_list(file_object_id, prefix):
         mlc.Field(
             id=f"{prefix}/image_path",
             name="image_path",
-            description="Path to 7-channel image tensor (.npy)",
+            description="Path to 9-channel image tensor (.npy)",
             data_types=[mlc.DataType.TEXT],
             source=mlc.Source(
                 file_object=file_object_id,
@@ -218,7 +218,7 @@ def generate_croissant(dataset_dir, output_path):
             id="catalog_files",
             name="catalog_files",
             includes="catalogs/*",
-            encoding_formats=["text/plain", "image/fits"]
+            encoding_formats=["text/plain"]
         )
     ]
 
@@ -237,7 +237,7 @@ def generate_croissant(dataset_dir, output_path):
 
     metadata = mlc.Metadata(
         name="roman_croissant_difference_imaging",
-        description="Difference imaging dataset with separate ZOGY and SFFT candidate record sets, catalogs, and metadata for transient classification",
+        description="Difference imaging dataset with 9-channel image tensors (science, reference, ZOGY diff/SCORR, SFFT diff/SCORR, PSF, ZOGY/SFFT uncertainties), separate ZOGY and SFFT candidate record sets, catalogs, and metadata for transient classification",
         distribution=distribution,
         record_sets=record_sets
     )

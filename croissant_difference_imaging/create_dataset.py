@@ -13,7 +13,9 @@ IMAGE_FILES = {
     "scorr_zogy": "scorrimage_masked.fits",
     "diff_sfft": "sfftdiffimage_dconv_masked.fits",
     "scorr_sfft": "sfftdiffimage_cconv_masked.fits",
-    "psf": "diffpsf.fits"
+    "psf": "diffpsf.fits",
+    "unc_zogy": "diffimage_uncert_masked.fits",
+    "unc_sfft": "sfftdiffimage_uncert_masked.fits"
 }
 
 CATALOG_FILES = {
@@ -24,9 +26,7 @@ CATALOG_FILES = {
     "sfft_sex": "sfftdiffimage_cconv_masked.txt",
     "sfft_sepsf": "sfftdiffimage_masked_sepsfcat.txt",
     "sfft_finder": "sfftdiffimage_masked_psfcat_finder.txt",
-    "sfft_psf": "sfftdiffimage_masked_psfcat.txt",
-    "diff_unc_zogy": "diffimage_uncert_masked.fits",
-    "diff_unc_sfft": "sfftdiffimage_uncert_masked.fits"
+    "sfft_psf": "sfftdiffimage_masked_psfcat.txt"
 }
 
 def load_and_normalize(filepath, target_shape=None):
@@ -69,7 +69,7 @@ def process_dataset(input_dir, output_dir):
         valid_image = True
         target_shape = None
         
-        for i, key in enumerate(["sci", "ref", "diff_zogy", "scorr_zogy", "diff_sfft", "scorr_sfft", "psf"]):
+        for i, key in enumerate(["sci", "ref", "diff_zogy", "scorr_zogy", "diff_sfft", "scorr_sfft", "psf", "unc_zogy", "unc_sfft"]):
             path = os.path.join(job_folder, IMAGE_FILES[key])
             if not os.path.exists(path):
                 valid_image = False
@@ -103,12 +103,8 @@ def process_dataset(input_dir, output_dir):
             src_path = os.path.join(job_folder, cat_file)
             if os.path.exists(src_path):
                 dst_path = os.path.join(catalogs_dir, f"{job_id}_{cat_file}")
-                if cat_file.endswith('.fits'):
-                    import shutil
-                    shutil.copy2(src_path, dst_path)
-                else:
-                    import shutil
-                    shutil.copy2(src_path, dst_path)
+                import shutil
+                shutil.copy2(src_path, dst_path)
 
         # Extract ZOGY candidates
         zogy_finder_path = os.path.join(job_folder, CATALOG_FILES["zogy_finder"])

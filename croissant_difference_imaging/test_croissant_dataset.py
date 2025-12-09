@@ -79,7 +79,7 @@ class DiffImagingCNN(nn.Module):
         super(DiffImagingCNN, self).__init__()
         
         self.features = nn.Sequential(
-            nn.Conv2d(7, 16, kernel_size=3, padding=1),
+            nn.Conv2d(9, 16, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
             
