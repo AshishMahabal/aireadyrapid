@@ -139,8 +139,20 @@ def process_dataset(input_dir, output_dir):
     cutouts_dir = os.path.join(output_dir, "cutouts")
     os.makedirs(cutouts_dir, exist_ok=True)
     
-    job_folders = sorted(glob.glob(os.path.join(input_dir, "jid*")))
-    print(f"Found {len(job_folders)} jobs to process.")
+    # Hardcoded specific job IDs to process
+    job_ids = [
+        "jid90855", "jid91099", "jid46433", "jid80433", "jid80436", "jid80439", 
+        "jid80442", "jid80444", "jid80448", "jid80451", "jid80896", "jid91348", 
+        "jid300", "jid82176", "jid82179", "jid82181", "jid82185", "jid82188", 
+        "jid82191", "jid82193", "jid82198", "jid82200", "jid90857", "jid91109", 
+        "jid37770", "jid80544", "jid80545", "jid80549", "jid80552", "jid80555", 
+        "jid80558", "jid80561", "jid90898", "jid91358", "jid91360", "jid82263", 
+        "jid82268", "jid82270", "jid82272", "jid82275", "jid82278", "jid82281", 
+        "jid82284", "jid82287"
+    ]
+    
+    job_folders = [os.path.join(input_dir, jid) for jid in job_ids if os.path.exists(os.path.join(input_dir, jid))]
+    print(f"Processing {len(job_folders)} specific jobs.")
     
     all_records = []
     cutout_counter = 0
