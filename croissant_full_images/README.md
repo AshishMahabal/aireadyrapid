@@ -4,20 +4,39 @@ This folder contains scripts to create, document, and test an AI ready dataset f
 
 ## Overview
 
-The pipeline processes astronomical FITS images from job folders, creates a unified dataset with 4-channel tensors (science, reference, difference, and score images), and generates Croissant-compliant metadata for AI-ready data loading.
+The pipeline processes astronomical FITS images from job folders, creates a unified dataset with 4-channel tensors (science, reference, difference, and SCORR images), and generates Croissant-compliant metadata for AI-ready data loading. **The pipeline now includes automatic injection tracking** via on-the-fly truth table generation and cross-matching.
+
+### Key Features:
+- **Automatic Truth Generation**: Generates truth tables and cross-matching on-the-fly from source catalogs
+- **Injection Tracking**: Identifies artificially injected vs natural transients
+- **Truth Linking**: Connects detections to ground truth via cross-matching
+- **Full Resolution Images**: 4090x4090 4-channel tensors for flexible analysis
+- **No Pre-processing Required**: Directly processes raw RAPID outputs without intermediate CSV files
 
 ## Scripts
 
 ### 1. `create_dataset.py`
 
-Processes raw FITS files from job folders and creates a normalized dataset.
+Processes raw FITS files from job folders and creates a normalized dataset with automatic truth table generation.
 
 **What it does:**
-- Reads 4 FITS files per job (science, reference, difference, score images)
+- Reads 4 FITS files per job (science, reference, difference, SCORR images)
 - Applies ZScale normalization to each image
 - Stacks them into a 4-channel tensor and saves as `.npy` files
-- Extracts candidate information from `psfcat.csv` catalogs
-- Creates a `master_index.csv` with all candidates and their labels
+- **Automatically generates truth tables** from injection catalogs and OpenUniverse catalogs
+- **Cross-matches detections** with truth sources (4 pixel radius)
+- Extracts injection status from truth catalogs
+- Creates a `master_index.csv` with all candidates, labels, and truth linking
+
+**Truth Table Generation:**
+The pipeline automatically:
+1. Searches for injection catalogs matching `Roman_TDS_simple_model_([a-zA-Z])(\d+)_(\d+)_(\d+)_lite_inject\.txt`
+2. Searches for OpenUniverse catalogs matching `Roman_TDS_index_([a-zA-Z])(\d+)_(\d+)_(\d+)\.txt`
+3. Extracts filter and zero-point magnitude from science image FITS header
+4. Combines all truth sources with injection flags
+5. Cross-matches PSF detections within 4 pixels (MAG_LIM=26.0)
+6. Assigns `match_id` to matched sources (format: `18_inj` for injections, `20149058_ou` for OpenUniverse)
+7. Labels: Real (1) if matched, Bogus (0) if unmatched
 
 **Usage:**
 ```bash
@@ -35,10 +54,14 @@ python create_dataset.py --input_dir <path_to_jobs> --output_dir <output_path>
 input_dir/
 ├── jid001/
 │   ├── bkg_subbed_science_image.fits
-│   ├── awaicgen_output_mosaic_image_resampled.fits
+│   ├── awaicgen_output_mosaic_image_resampled_gainmatched.fits
 │   ├── diffimage_masked.fits
 │   ├── scorrimage_masked.fits
-│   └── psfcat.csv
+│   ├── diffimage_masked_psfcat_finder.txt      # Finder catalog
+│   ├── diffimage_masked_psfcat.txt             # PSF photometry
+│   ├── Roman_TDS_simple_model_*.txt            # Injection truth catalogs (auto-detected)
+│   ├── Roman_TDS_index_*.txt                   # OpenUniverse catalogs (auto-detected)
+│   └── Roman_TDS_simple_model_*_reformatted.fits  # Science image with metadata
 ├── jid002/
 │   └── ...
 ```
@@ -57,7 +80,7 @@ output_dir/
 
 ### 2. `generate_croissant.py`
 
-Generates a Croissant metadata file (`croissant.json`) for the dataset.
+Generates a Croissant metadata file (`croissant.json`) for the dataset with injection tracking fields.
 
 **What it does:**
 - Reads the master index CSV
@@ -135,7 +158,9 @@ The `master_index.csv` contains the following columns:
 | `mag` | float | Instrumental magnitude |
 | `daofind_mag` | float | DAOFind magnitude |
 | `flags` | float | Quality flags from psfcat |
-| `match` | float | Match indicator from psfcat |
+| `match_id` | string | Match ID linking to truth table (e.g., '18_inj', '20149058_ou') |
+| `truth_id` | string | Truth table ID for matched sources |
+| `injected` | bool | Whether source was artificially injected |
 | `label` | int | Binary label (0=bogus, 1=real) |
 | `image_filename` | string | Relative path to the `.npy` image tensor |
 
@@ -145,6 +170,6 @@ Each `.npy` file contains a tensor of shape `(H, W, 4)` where the 4 channels are
 1. **Science image** - Background-subtracted science frame
 2. **Reference image** - Resampled reference/template image
 3. **Difference image** - Science minus reference (masked)
-4. **Score image** - Significance/score map (masked)
+4. **SCORR image** - SCORR map (masked)
 
 All channels are ZScale normalized to the range [0, 1].

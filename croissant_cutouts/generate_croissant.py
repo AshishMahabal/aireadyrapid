@@ -165,14 +165,36 @@ def generate_croissant(csv_path, output_path):
                         extract=mlc.Extract(column="flags")
                     )
                 ),
+                
+                # Truth and metadata fields
                 mlc.Field(
-                    id="transient_candidates/match",
-                    name="match",
-                    description="Cross-match indicator (-1 for bogus)",
-                    data_types=[mlc.DataType.FLOAT],
+                    id="transient_candidates/match_id",
+                    name="match_id",
+                    description="Match ID linking to truth table (empty for bogus, e.g., '18_inj', '20149058_ou')",
+                    data_types=[mlc.DataType.TEXT],
                     source=mlc.Source(
                         file_object="master_index",
-                        extract=mlc.Extract(column="match")
+                        extract=mlc.Extract(column="match_id")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/truth_id",
+                    name="truth_id",
+                    description="Truth table ID for matched sources (e.g., '18_inj', '20149058_ou')",
+                    data_types=[mlc.DataType.TEXT],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="truth_id")
+                    )
+                ),
+                mlc.Field(
+                    id="transient_candidates/injected",
+                    name="injected",
+                    description="Whether source was artificially injected (True/False)",
+                    data_types=[mlc.DataType.BOOL],
+                    source=mlc.Source(
+                        file_object="master_index",
+                        extract=mlc.Extract(column="injected")
                     )
                 ),
                 mlc.Field(

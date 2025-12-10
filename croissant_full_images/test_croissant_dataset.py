@@ -109,6 +109,22 @@ def train_model(dataset_dir):
     json_path = os.path.join(dataset_dir, "croissant.json")
     dataset = RomanCroissantDataset(json_path, dataset_dir)
     
+    if len(dataset) == 0:
+        print("No data loaded. Exiting.")
+        return None
+    
+    # Print dataset statistics
+    print("\n" + "="*50)
+    print("Dataset Statistics:")
+    print("="*50)
+    total_samples = len(dataset)
+    real_count = sum(1 for record in dataset.records if record.get("transient_candidates/label") == 1)
+    bogus_count = total_samples - real_count
+    print(f"Total Samples: {total_samples}")
+    print(f"Real Transients: {real_count} ({100*real_count/total_samples:.1f}%)")
+    print(f"Bogus Detections: {bogus_count} ({100*bogus_count/total_samples:.1f}%)")
+    print("="*50 + "\n")
+    
     loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -140,7 +156,7 @@ def train_model(dataset_dir):
             correct += (preds == labels).sum().item()
             total += labels.size(0)
             
-            if i % 5 == 0:
+            if i % 10 == 0:
                 print(f"  [Epoch {epoch+1}, Batch {i}] Loss: {loss.item():.4f}")
 
         epoch_acc = 100 * correct / total

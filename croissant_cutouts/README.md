@@ -4,20 +4,30 @@ This folder contains scripts to create, document, and test a machine learning da
 
 ## Overview
 
-The pipeline processes astronomical FITS images from job folders, extracts 64x64 cutouts centered on each candidate position, and creates a Croissant-compliant dataset. Unlike the full images pipeline, this approach pre-extracts cutouts during dataset creation, resulting in faster training times and reduced memory usage.
+The pipeline processes astronomical FITS images from job folders, extracts 64x64 cutouts centered on each candidate position, and creates a Croissant-compliant dataset. The pipeline includes **automatic injection tracking** via on-the-fly truth table generation and cross-matching. Unlike the full images pipeline, this approach pre-extracts cutouts during dataset creation, resulting in faster training times and reduced memory usage.
+
+### Key Features:
+- **Automatic Truth Generation**: Generates truth tables and cross-matching on-the-fly from source catalogs
+- **Injection Tracking**: Identifies artificially injected vs natural transients
+- **Truth Linking**: Connects detections to ground truth via cross-matching
+- **Pre-extracted Cutouts**: 64x64x4 tensors for fast training
+- **No Pre-processing Required**: Directly processes raw RAPID outputs without intermediate CSV files
 
 ## Scripts
 
 ### 1. `create_dataset.py`
 
-Processes raw FITS files from job folders and creates a dataset of 64x64 cutouts.
+Processes raw FITS files from job folders and creates a dataset of 64x64 cutouts with automatic truth table generation.
 
 **What it does:**
-- Reads 4 FITS files per job (science, reference, difference, score images)
+- Reads 4 FITS files per job (science, reference, difference, SCORR images)
 - Applies ZScale normalization to each full image
+- **Automatically generates truth tables** from injection catalogs and OpenUniverse catalogs
+- **Cross-matches detections** with truth sources (4 pixel radius)
+- Extracts injection status from truth catalogs
 - For each candidate in the catalog, extracts a 64x64 cutout from each normalized image
 - Stacks the 4 cutouts into a (64, 64, 4) tensor and saves as `.npy` files
-- Creates a `master_index.csv` with all candidates and their labels
+- Creates a `master_index.csv` with all candidates, labels, and truth linking
 
 **Usage:**
 ```bash
@@ -35,10 +45,14 @@ python create_dataset.py --input_dir <path_to_jobs> --output_dir <output_path>
 input_dir/
 ├── jid001/
 │   ├── bkg_subbed_science_image.fits
-│   ├── awaicgen_output_mosaic_image_resampled.fits
+│   ├── awaicgen_output_mosaic_image_resampled_gainmatched.fits
 │   ├── diffimage_masked.fits
 │   ├── scorrimage_masked.fits
-│   └── psfcat.csv
+│   ├── diffimage_masked_psfcat_finder.txt      # Finder catalog
+│   ├── diffimage_masked_psfcat.txt             # PSF photometry
+│   ├── Roman_TDS_simple_model_*.txt            # Injection truth catalogs (auto-detected)
+│   ├── Roman_TDS_index_*.txt                   # OpenUniverse catalogs (auto-detected)
+│   └── Roman_TDS_simple_model_*_reformatted.fits  # Science image with metadata
 ├── jid002/
 │   └── ...
 ```
@@ -54,14 +68,25 @@ output_dir/
 └── master_index.csv
 ```
 
+**Truth Table Generation:**
+The pipeline automatically:
+1. Searches for injection catalogs matching `Roman_TDS_simple_model_([a-zA-Z])(\d+)_(\d+)_(\d+)_lite_inject\.txt`
+2. Searches for OpenUniverse catalogs matching `Roman_TDS_index_([a-zA-Z])(\d+)_(\d+)_(\d+)\.txt`
+3. Extracts filter and zero-point magnitude from science image FITS header
+4. Combines all truth sources with injection flags
+5. Cross-matches PSF detections within 4 pixels
+6. Assigns `match_id` to matched sources (format: `18_inj` for injections, `20149058_ou` for OpenUniverse)
+7. Labels: Real (1) if matched, Bogus (0) if unmatched
+
 ---
 
 ### 2. `generate_croissant.py`
 
-Generates a Croissant metadata file (`croissant.json`) for the cutout dataset.
+Generates a Croissant metadata file (`croissant.json`) for the cutout dataset with injection tracking fields.
 
 **What it does:**
 - Reads the master index CSV
+- Documents injection status, truth linking fields
 - Creates Croissant-compliant JSON metadata describing the dataset schema
 
 **Usage:**
@@ -137,7 +162,9 @@ The `master_index.csv` contains the following columns:
 | `mag` | float | Instrumental magnitude |
 | `daofind_mag` | float | DAOFind magnitude |
 | `flags` | float | Quality flags from psfcat |
-| `match` | float | Match indicator from psfcat |
+| `match_id` | string | Match ID linking to truth table (e.g., '18_inj', '20149058_ou') |
+| `truth_id` | string | Truth table ID for matched sources |
+| `injected` | bool | Whether source was artificially injected |
 | `label` | int | Binary label (0=bogus, 1=real) |
 | `cutout_filename` | string | Relative path to the `.npy` cutout file |
 
@@ -147,6 +174,6 @@ Each `.npy` file contains a tensor of shape `(64, 64, 4)` where the 4 channels a
 1. **Science image** - Background-subtracted science frame cutout
 2. **Reference image** - Resampled reference/template image cutout
 3. **Difference image** - Science minus reference cutout (masked)
-4. **Score image** - Significance/score map cutout (masked)
+4. **SCORR image** - SCORR map cutout (masked)
 
 ZScale normalization is applied to each full image before cutout extraction, and cutouts near image edges are zero-padded to maintain the 64x64 size.
