@@ -17,12 +17,13 @@ def get_sha256(filepath):
         return ""
 
 def create_field_list(file_object_id, prefix):
-    """Create list of fields for a record set"""
+    """Create list of fields for candidate record set"""
     return [
+        # Core identification and position
         mlc.Field(
             id=f"{prefix}/id",
             name="id",
-            description="Candidate identifier from source finder",
+            description="Candidate identifier",
             data_types=[mlc.DataType.FLOAT],
             source=mlc.Source(
                 file_object=file_object_id,
@@ -49,104 +50,36 @@ def create_field_list(file_object_id, prefix):
                 extract=mlc.Extract(column="y")
             )
         ),
+        
+        # Truth and metadata
         mlc.Field(
-            id=f"{prefix}/sharpness",
-            name="sharpness",
-            description="Source sharpness metric",
-            data_types=[mlc.DataType.FLOAT],
+            id=f"{prefix}/match_id",
+            name="match_id",
+            description="Match ID linking to truth table (empty for bogus, e.g., '18_inj', '20149058_ou')",
+            data_types=[mlc.DataType.TEXT],
             source=mlc.Source(
                 file_object=file_object_id,
-                extract=mlc.Extract(column="sharpness")
+                extract=mlc.Extract(column="match_id")
             )
         ),
         mlc.Field(
-            id=f"{prefix}/roundness1",
-            name="roundness1",
-            description="First roundness parameter",
-            data_types=[mlc.DataType.FLOAT],
+            id=f"{prefix}/truth_id",
+            name="truth_id",
+            description="Truth table ID for matched sources (e.g., '18_inj', '20149058_ou')",
+            data_types=[mlc.DataType.TEXT],
             source=mlc.Source(
                 file_object=file_object_id,
-                extract=mlc.Extract(column="roundness1")
+                extract=mlc.Extract(column="truth_id")
             )
         ),
         mlc.Field(
-            id=f"{prefix}/roundness2",
-            name="roundness2",
-            description="Second roundness parameter",
-            data_types=[mlc.DataType.FLOAT],
+            id=f"{prefix}/injected",
+            name="injected",
+            description="Whether source was artificially injected (True/False)",
+            data_types=[mlc.DataType.BOOL],
             source=mlc.Source(
                 file_object=file_object_id,
-                extract=mlc.Extract(column="roundness2")
-            )
-        ),
-        mlc.Field(
-            id=f"{prefix}/npix",
-            name="npix",
-            description="Number of pixels above threshold",
-            data_types=[mlc.DataType.FLOAT],
-            source=mlc.Source(
-                file_object=file_object_id,
-                extract=mlc.Extract(column="npix")
-            )
-        ),
-        mlc.Field(
-            id=f"{prefix}/peak",
-            name="peak",
-            description="Peak pixel intensity",
-            data_types=[mlc.DataType.FLOAT],
-            source=mlc.Source(
-                file_object=file_object_id,
-                extract=mlc.Extract(column="peak")
-            )
-        ),
-        mlc.Field(
-            id=f"{prefix}/flux",
-            name="flux",
-            description="Measured source flux",
-            data_types=[mlc.DataType.FLOAT],
-            source=mlc.Source(
-                file_object=file_object_id,
-                extract=mlc.Extract(column="flux")
-            )
-        ),
-        mlc.Field(
-            id=f"{prefix}/mag",
-            name="mag",
-            description="Instrumental magnitude",
-            data_types=[mlc.DataType.FLOAT],
-            source=mlc.Source(
-                file_object=file_object_id,
-                extract=mlc.Extract(column="mag")
-            )
-        ),
-        mlc.Field(
-            id=f"{prefix}/daofind_mag",
-            name="daofind_mag",
-            description="DAOFind-derived magnitude",
-            data_types=[mlc.DataType.FLOAT],
-            source=mlc.Source(
-                file_object=file_object_id,
-                extract=mlc.Extract(column="daofind_mag")
-            )
-        ),
-        mlc.Field(
-            id=f"{prefix}/flags",
-            name="flags",
-            description="Quality flags from photometry",
-            data_types=[mlc.DataType.FLOAT],
-            source=mlc.Source(
-                file_object=file_object_id,
-                extract=mlc.Extract(column="flags")
-            )
-        ),
-        mlc.Field(
-            id=f"{prefix}/match",
-            name="match",
-            description="Cross-match indicator (-1 for bogus)",
-            data_types=[mlc.DataType.FLOAT],
-            source=mlc.Source(
-                file_object=file_object_id,
-                extract=mlc.Extract(column="match")
+                extract=mlc.Extract(column="injected")
             )
         ),
         mlc.Field(
@@ -169,10 +102,196 @@ def create_field_list(file_object_id, prefix):
                 extract=mlc.Extract(column="jid")
             )
         ),
+        
+        # ZOGY-specific features
+        mlc.Field(
+            id=f"{prefix}/zogy_sharpness",
+            name="zogy_sharpness",
+            description="ZOGY: Source sharpness metric",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="zogy_sharpness")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/zogy_roundness1",
+            name="zogy_roundness1",
+            description="ZOGY: First roundness parameter",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="zogy_roundness1")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/zogy_roundness2",
+            name="zogy_roundness2",
+            description="ZOGY: Second roundness parameter",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="zogy_roundness2")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/zogy_npix",
+            name="zogy_npix",
+            description="ZOGY: Number of pixels above threshold",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="zogy_npix")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/zogy_peak",
+            name="zogy_peak",
+            description="ZOGY: Peak pixel intensity",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="zogy_peak")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/zogy_flux",
+            name="zogy_flux",
+            description="ZOGY: Measured source flux",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="zogy_flux")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/zogy_mag",
+            name="zogy_mag",
+            description="ZOGY: Instrumental magnitude",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="zogy_mag")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/zogy_daofind_mag",
+            name="zogy_daofind_mag",
+            description="ZOGY: DAOFind-derived magnitude",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="zogy_daofind_mag")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/zogy_flags",
+            name="zogy_flags",
+            description="ZOGY: Quality flags from photometry",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="zogy_flags")
+            )
+        ),
+        
+        # SFFT-specific features
+        mlc.Field(
+            id=f"{prefix}/sfft_sharpness",
+            name="sfft_sharpness",
+            description="SFFT: Source sharpness metric",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="sfft_sharpness")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/sfft_roundness1",
+            name="sfft_roundness1",
+            description="SFFT: First roundness parameter",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="sfft_roundness1")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/sfft_roundness2",
+            name="sfft_roundness2",
+            description="SFFT: Second roundness parameter",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="sfft_roundness2")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/sfft_npix",
+            name="sfft_npix",
+            description="SFFT: Number of pixels above threshold",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="sfft_npix")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/sfft_peak",
+            name="sfft_peak",
+            description="SFFT: Peak pixel intensity",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="sfft_peak")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/sfft_flux",
+            name="sfft_flux",
+            description="SFFT: Measured source flux",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="sfft_flux")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/sfft_mag",
+            name="sfft_mag",
+            description="SFFT: Instrumental magnitude",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="sfft_mag")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/sfft_daofind_mag",
+            name="sfft_daofind_mag",
+            description="SFFT: DAOFind-derived magnitude",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="sfft_daofind_mag")
+            )
+        ),
+        mlc.Field(
+            id=f"{prefix}/sfft_flags",
+            name="sfft_flags",
+            description="SFFT: Quality flags from photometry",
+            data_types=[mlc.DataType.FLOAT],
+            source=mlc.Source(
+                file_object=file_object_id,
+                extract=mlc.Extract(column="sfft_flags")
+            )
+        ),
+        
+        # Image reference
         mlc.Field(
             id=f"{prefix}/image_path",
             name="image_path",
-            description="Path to 9-channel image tensor (.npy)",
+            description="Path to 9-channel image tensor (.npy) with ZOGY and SFFT products",
             data_types=[mlc.DataType.TEXT],
             source=mlc.Source(
                 file_object=file_object_id,
@@ -182,31 +301,21 @@ def create_field_list(file_object_id, prefix):
     ]
 
 def generate_croissant(dataset_dir, output_path):
-    zogy_csv_path = os.path.join(dataset_dir, "zogy_candidates.csv")
-    sfft_csv_path = os.path.join(dataset_dir, "sfft_candidates.csv")
+    candidates_csv_path = os.path.join(dataset_dir, "candidates.csv")
     
-    zogy_sha256 = get_sha256(zogy_csv_path)
-    sfft_sha256 = get_sha256(sfft_csv_path)
+    candidates_sha256 = get_sha256(candidates_csv_path)
     
-    print(f"Calculated SHA256 for {zogy_csv_path}: {zogy_sha256}")
-    print(f"Calculated SHA256 for {sfft_csv_path}: {sfft_sha256}")
+    print(f"Calculated SHA256 for {candidates_csv_path}: {candidates_sha256}")
 
     ctx = mlc.Context()
 
     distribution = [
         mlc.FileObject(
-            id="zogy_index",
-            name="zogy_index",
-            content_url="zogy_candidates.csv",
+            id="candidates_index",
+            name="candidates_index",
+            content_url="candidates.csv",
             encoding_formats=["text/csv"],
-            sha256=zogy_sha256
-        ),
-        mlc.FileObject(
-            id="sfft_index",
-            name="sfft_index",
-            content_url="sfft_candidates.csv",
-            encoding_formats=["text/csv"],
-            sha256=sfft_sha256
+            sha256=candidates_sha256
         ),
         mlc.FileSet(
             id="npy_images",
@@ -224,20 +333,15 @@ def generate_croissant(dataset_dir, output_path):
 
     record_sets = [
         mlc.RecordSet(
-            id="zogy_candidates",
-            name="zogy_candidates",
-            fields=create_field_list("zogy_index", "zogy_candidates")
-        ),
-        mlc.RecordSet(
-            id="sfft_candidates",
-            name="sfft_candidates",
-            fields=create_field_list("sfft_index", "sfft_candidates")
+            id="transient_candidates",
+            name="transient_candidates",
+            fields=create_field_list("candidates_index", "transient_candidates")
         )
     ]
 
     metadata = mlc.Metadata(
         name="roman_croissant_difference_imaging",
-        description="Difference imaging dataset with 9-channel image tensors (science, reference, ZOGY diff/SCORR, SFFT diff/SCORR, PSF, ZOGY/SFFT uncertainties), separate ZOGY and SFFT candidate record sets, catalogs, and metadata for transient classification",
+        description="Unified difference imaging dataset with 9-channel image tensors (science, reference, ZOGY diff/SCORR, SFFT diff/SCORR, PSF, uncertainties), combined ZOGY+SFFT features per candidate, and injection tracking for comprehensive transient classification and algorithm comparison",
         distribution=distribution,
         record_sets=record_sets
     )
