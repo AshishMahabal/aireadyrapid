@@ -328,9 +328,9 @@ if __name__ == "__main__":
                         help="Input directory containing job folders (default: ./mini_dataset)")
     parser.add_argument("--output_dir", "-o", type=str, default="./hackathon_dataset",
                         help="Output directory for processed dataset (default: ./hackathon_dataset)")
-    parser.add_argument("--field-files", nargs="+", help="Field list text files (e.g., H158_fields.txt R062_fields.txt)")
+    parser.add_argument("--field_files", nargs="+", help="Field list text files (e.g., H158_fields.txt R062_fields.txt)")
     parser.add_argument("--fields", nargs="+", type=int, help="Specific field IDs to process")
-    parser.add_argument("--mjd-max", type=float, help="Maximum MJD value (upper bound)")
+    parser.add_argument("--mjd_max", type=float, help="Maximum MJD value (upper bound)")
     
     args = parser.parse_args()
     

@@ -31,7 +31,25 @@ Processes raw FITS files from job folders and creates a dataset of 64x64 cutouts
 
 **Usage:**
 ```bash
-python create_dataset.py --input_dir <path_to_jobs> --output_dir <output_path>
+# Basic usage with default directories
+python create_dataset.py
+
+# Specify custom directories
+python create_dataset.py --input_dir /path/to/jobs --output_dir /path/to/output
+
+# Filter by specific fields from field list files
+python create_dataset.py --input_dir /path/to/jobs --output_dir /path/to/output \
+  --field_files H158_fields.txt R062_fields.txt \
+  --fields 5261331 5325281 5356473
+
+# Set MJD upper bound
+python create_dataset.py --input_dir /path/to/jobs --output_dir /path/to/output \
+  --field_files R062_fields.txt --mjd_max 62100.0
+
+# Combine all filters
+python create_dataset.py --input_dir /path/to/jobs --output_dir /path/to/output \
+  --field_files H158_fields.txt R062_fields.txt \
+  --fields 5261331 5297552 --mjd_max 62075.5
 ```
 
 **Arguments:**
@@ -39,6 +57,16 @@ python create_dataset.py --input_dir <path_to_jobs> --output_dir <output_path>
 |----------|-------|---------|-------------|
 | `--input_dir` | `-i` | `./mini_dataset` | Input directory containing `jid*` job folders |
 | `--output_dir` | `-o` | `./hackathon_dataset` | Output directory for processed dataset |
+| `--field_files` | | None | Field list text files (e.g., H158_fields.txt R062_fields.txt) |
+| `--fields` | | None | Specific field IDs to process (space-separated integers) |
+| `--mjd_max` | | None | Maximum MJD value (upper bound, accepts decimals) |
+
+**Field List Filtering:**
+When `--field_files` is provided, the script will:
+- Read job IDs from the specified field list files
+- Filter by `--fields` (if provided) to process only specific field IDs
+- Filter by `--mjd_max` (if provided) to process only observations up to that MJD
+- If no field files are provided, the script discovers all `jid*` folders automatically
 
 **Expected input structure:**
 ```
