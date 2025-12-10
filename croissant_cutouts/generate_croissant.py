@@ -155,16 +155,6 @@ def generate_croissant(csv_path, output_path):
                         extract=mlc.Extract(column="daofind_mag")
                     )
                 ),
-                mlc.Field(
-                    id="transient_candidates/flags",
-                    name="flags",
-                    description="Quality flags from photometry",
-                    data_types=[mlc.DataType.FLOAT],
-                    source=mlc.Source(
-                        file_object="master_index",
-                        extract=mlc.Extract(column="flags")
-                    )
-                ),
                 
                 # Truth and metadata fields
                 mlc.Field(
@@ -244,12 +234,16 @@ def generate_croissant(csv_path, output_path):
     metadata = mlc.Metadata(
         name="roman_croissant_cutouts",
         description="Pre-extracted 64x64 cutouts with candidate metadata for transient classification",
+        cite_as="December 2025 Roman Quarterly",
+        version="0.9.0",
+        date_published="2025-12-10",
+        license=["https://creativecommons.org/licenses/by/4.0/"],
         distribution=distribution,
         record_sets=record_sets
     )
 
     with open(output_path, "w") as f:
-        f.write(json.dumps(metadata.to_json(), indent=2))
+        f.write(json.dumps(metadata.to_json(), indent=2, default=str))
 
     print(f"Successfully generated {output_path}")
 

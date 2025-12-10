@@ -342,12 +342,16 @@ def generate_croissant(dataset_dir, output_path):
     metadata = mlc.Metadata(
         name="roman_croissant_difference_imaging",
         description="Unified difference imaging dataset with 9-channel image tensors (science, reference, ZOGY diff/SCORR, SFFT diff/SCORR, PSF, uncertainties), combined ZOGY+SFFT features per candidate, and injection tracking for comprehensive transient classification and algorithm comparison",
+        cite_as="December 2025 Roman Quarterly",
+        version="0.9.0",
+        date_published="2025-12-10",
+        license=["https://creativecommons.org/licenses/by/4.0/"],
         distribution=distribution,
         record_sets=record_sets
     )
 
     with open(output_path, "w") as f:
-        f.write(json.dumps(metadata.to_json(), indent=2))
+        f.write(json.dumps(metadata.to_json(), indent=2, default=str))
 
     print(f"Successfully generated {output_path}")
 
