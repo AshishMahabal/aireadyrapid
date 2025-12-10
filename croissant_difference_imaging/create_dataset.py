@@ -19,6 +19,40 @@ FEATS_CATALOGS = r'diffimage_masked_psfcat_finder.txt'
 MAG_LIM = 26.0
 CROSS_MATCH_MAX_SEP = 4.0  # pixels
 
+
+def load_field_list(field_files, selected_fields=None, mjd_upper_bound=None):
+    """
+    Load field list from one or more text files and filter by fields and MJD.
+    
+    Args:
+        field_files: List of paths to field list text files
+        selected_fields: List of field IDs to include (None = all fields)
+        mjd_upper_bound: Maximum MJD value (None = no limit)
+    
+    Returns:
+        List of job IDs that match the criteria
+    """
+    all_data = []
+    
+    for field_file in field_files:
+        df = pd.read_csv(field_file, delim_whitespace=True)
+        all_data.append(df)
+    
+    combined_df = pd.concat(all_data, ignore_index=True)
+    
+    # Apply field filter
+    if selected_fields is not None:
+        combined_df = combined_df[combined_df['FIELD'].isin(selected_fields)]
+    
+    # Apply MJD upper bound
+    if mjd_upper_bound is not None:
+        combined_df = combined_df[combined_df['MJD'] <= mjd_upper_bound]
+    
+    # Extract job IDs
+    job_ids = combined_df['JOB'].unique().tolist()
+    
+    return sorted(job_ids)
+
 IMAGE_FILES = {
     "sci": "bkg_subbed_science_image.fits",
     "ref": "awaicgen_output_mosaic_image_resampled_gainmatched.fits",
@@ -135,26 +169,27 @@ def load_and_normalize(filepath, target_shape=None):
         print(f"Error reading {filepath}: {e}")
         return None
 
-def process_dataset(input_dir, output_dir):
+def process_dataset(input_dir, output_dir, field_files=None, selected_fields=None, mjd_upper_bound=None):
     images_dir = os.path.join(output_dir, "images")
     catalogs_dir = os.path.join(output_dir, "catalogs")
     os.makedirs(images_dir, exist_ok=True)
     os.makedirs(catalogs_dir, exist_ok=True)
     
-    # Hardcoded specific job IDs to process
-    job_ids = [
-        "jid90855", "jid91099", "jid46433", "jid80433", "jid80436", "jid80439", 
-        "jid80442", "jid80444", "jid80448", "jid80451", "jid80896", "jid91348", 
-        "jid300", "jid82176", "jid82179", "jid82181", "jid82185", "jid82188", 
-        "jid82191", "jid82193", "jid82198", "jid82200", "jid90857", "jid91109", 
-        "jid37770", "jid80544", "jid80545", "jid80549", "jid80552", "jid80555", 
-        "jid80558", "jid80561", "jid90898", "jid91358", "jid91360", "jid82263", 
-        "jid82268", "jid82270", "jid82272", "jid82275", "jid82278", "jid82281", 
-        "jid82284", "jid82287"
-    ]
+    # Load job IDs from field list files
+    if field_files:
+        job_ids = load_field_list(field_files, selected_fields, mjd_upper_bound)
+        print(f"Loaded {len(job_ids)} jobs from field lists.")
+        if selected_fields:
+            print(f"Filtered by fields: {selected_fields}")
+        if mjd_upper_bound:
+            print(f"MJD upper bound: {mjd_upper_bound}")
+    else:
+        # Fallback: discover all jid* folders
+        job_ids = [os.path.basename(f) for f in sorted(glob.glob(os.path.join(input_dir, "jid*")))]
+        print(f"No field list provided. Discovered {len(job_ids)} jobs.")
     
     job_folders = [os.path.join(input_dir, jid) for jid in job_ids if os.path.exists(os.path.join(input_dir, jid))]
-    print(f"Processing {len(job_folders)} specific jobs.")
+    print(f"Processing {len(job_folders)} jobs.")
     
     all_records = []
 
@@ -399,11 +434,15 @@ def process_dataset(input_dir, output_dir):
         print("\nNo candidates found.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Create difference imaging dataset from FITS files")
+    parser = argparse.ArgumentParser(description="Create Croissant difference imaging dataset")
     parser.add_argument("--input_dir", "-i", type=str, default="./mini_dataset",
                         help="Input directory containing job folders (default: ./mini_dataset)")
     parser.add_argument("--output_dir", "-o", type=str, default="./hackathon_dataset",
                         help="Output directory for processed dataset (default: ./hackathon_dataset)")
+    parser.add_argument("--field-files", nargs="+", help="Field list text files (e.g., H158_fields.txt R062_fields.txt)")
+    parser.add_argument("--fields", nargs="+", type=int, help="Specific field IDs to process")
+    parser.add_argument("--mjd-max", type=float, help="Maximum MJD value (upper bound)")
+    
     args = parser.parse_args()
     
-    process_dataset(args.input_dir, args.output_dir)
+    process_dataset(args.input_dir, args.output_dir, args.field_files, args.fields, args.mjd_max)
