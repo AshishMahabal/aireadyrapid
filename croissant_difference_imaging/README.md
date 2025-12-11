@@ -140,7 +140,7 @@ python generate_croissant.py --csv_path <path_to_csv> --output <output_json_path
 **Arguments:**
 | Argument | Short | Default | Description |
 |----------|-------|---------|-------------|
-| `--csv_path` | `-c` | `./hackathon_dataset/master_index.csv` | Path to the master index CSV file |
+| `--csv_path` | `-c` | `./hackathon_dataset/candidates.csv` | Path to the candidates CSV file |
 | `--output` | `-o` | `./hackathon_dataset/croissant.json` | Output path for `croissant.json` |
 
 ---
