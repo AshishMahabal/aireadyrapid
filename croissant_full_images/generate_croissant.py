@@ -155,16 +155,6 @@ def generate_croissant(csv_path, output_path):
                         extract=mlc.Extract(column="daofind_mag")
                     )
                 ),
-                mlc.Field(
-                    id="transient_candidates/flags",
-                    name="flags",
-                    description="Quality flags from photometry",
-                    data_types=[mlc.DataType.FLOAT],
-                    source=mlc.Source(
-                        file_object="master_index",
-                        extract=mlc.Extract(column="flags")
-                    )
-                ),
                 
                 # Truth and metadata fields
                 mlc.Field(
