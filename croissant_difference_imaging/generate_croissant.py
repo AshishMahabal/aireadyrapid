@@ -300,8 +300,9 @@ def create_field_list(file_object_id, prefix):
         )
     ]
 
-def generate_croissant(dataset_dir, output_path):
-    candidates_csv_path = os.path.join(dataset_dir, "candidates.csv")
+def generate_croissant(csv_path, output_path):
+    candidates_csv_path = csv_path
+    dataset_dir = os.path.dirname(csv_path)
     
     candidates_sha256 = get_sha256(candidates_csv_path)
     
@@ -357,10 +358,10 @@ def generate_croissant(dataset_dir, output_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Croissant metadata file")
-    parser.add_argument("--dataset_dir", "-d", type=str, default="./hackathon_dataset",
-                        help="Dataset directory containing CSV files (default: ./hackathon_dataset)")
+    parser.add_argument("--csv_path", "-c", type=str, default="./hackathon_dataset/candidates.csv",
+                        help="Path to the candidates CSV file (default: ./hackathon_dataset/candidates.csv)")
     parser.add_argument("--output", "-o", type=str, default="./hackathon_dataset/croissant.json",
                         help="Output path for croissant.json (default: ./hackathon_dataset/croissant.json)")
     args = parser.parse_args()
     
-    generate_croissant(args.dataset_dir, args.output)
+    generate_croissant(args.csv_path, args.output)

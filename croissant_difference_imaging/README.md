@@ -134,14 +134,13 @@ Generates a Croissant metadata file (`croissant.json`) for the unified dataset.
 
 **Usage:**
 ```bash
-python generate_croissant.py --dataset_dir <dataset_path> --output <output_json_path>
+python generate_croissant.py --csv_path <path_to_csv> --output <output_json_path>
 ```
 
 **Arguments:**
-
 | Argument | Short | Default | Description |
 |----------|-------|---------|-------------|
-| `--dataset_dir` | `-d` | `./hackathon_dataset` | Dataset directory containing candidates.csv |
+| `--csv_path` | `-c` | `./hackathon_dataset/master_index.csv` | Path to the master index CSV file |
 | `--output` | `-o` | `./hackathon_dataset/croissant.json` | Output path for `croissant.json` |
 
 ---
@@ -190,7 +189,7 @@ python test_croissant_dataset.py --dataset_dir <path_to_dataset> --algorithm bot
 python create_dataset.py -i ./raw_data -o ./my_dataset
 
 # Step 2: Generate Croissant metadata
-python generate_croissant.py -d ./my_dataset -o ./my_dataset/croissant.json
+python generate_croissant.py -c ./my_dataset/candidates.csv -o ./my_dataset/croissant.json
 
 # Step 3: Test dataset and train model with combined features
 python test_croissant_dataset.py -d ./my_dataset --algorithm both
