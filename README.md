@@ -147,8 +147,8 @@ All pipelines produce:
 ## Key Features
 
 - **Zero pre-processing**: No intermediate CSV files required - generates truth tables on-the-fly
-- **Injection tracking**: Automatically identifies 73 injected sources across datasets
-- **Consistent labeling**: ~79 real transients identified via cross-matching
+- **Injection tracking**: Automatically identifies all injected sources across datasets
+- **Consistent labeling**: All real transients are identified via cross-matching
 - **Croissant-compliant**: Proper TEXT/BOOL data types prevent loading errors
 - **Algorithm comparison**: Difference imaging pipeline enables ZOGY vs SFFT analysis
 
